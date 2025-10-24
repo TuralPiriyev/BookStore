@@ -1,0 +1,26 @@
+.subscribe{background-color: #FFC46B66; height: 65vh;
+     max-width: 100vw;   margin: auto; }
+.sub-cont{width: 100%;  display: flex; flex-direction: row; }
+.part1, .part2{margin: auto;}
+.part2{box-sizing: border-box;  padding: 30px;}
+.mail{width: 100%; height: 100%;}
+.mail h2{color: #000000; font: 48px "Noto Serif", serif; font-weight: bold; margin: 0; }
+.send-mail{  display: flex; flex-direction: row; gap:20px; margin-top: 10%;}
+.send-mail input{background-color: #FFFFFF; padding: 11px; width: 70%; outline: none;border: none;}
+.send-mail button{color: #000000; font: 80% Sora, sans-serif; background-color:#ffb039; width: 25%; padding: 10px 10px; border: 0; font-weight: bold;}
+.send-mail button:hover{background-color: #FFC46B99;}
+/**/
+.foot{ background-color: #000000; max-width: 100vw; height: 30vh; display: flex; flex-direction: row; justify-content: space-evenly; }
+.footer-links{display: flex; flex-direction: column; }
+.footer-links h5{color: #ffffff; font: 21px "Noto Serif", serif;}
+.footer-links a{text-decoration: none; color: #ffffff; font:15px Sora, sans-serif; transition: all 0.4s ease; }
+.footer-links a:hover{color: #FFC46B;  transform: scale(1.05); } 
+.foot-logo{margin: 30px;}
+
+@media (max-width:768px){
+    .subscribe{height: 100vh;}
+    .sub-cont{width: 100%;  display: flex; flex-direction: column;}
+    .foot{display: flex; flex-direction: column; height: 100%; align-items: center; flex-wrap: wrap;}
+    .part2 img{width: 100%; height: 100%;}
+    .foot-logo img{width: 100%; height: 100%;}
+}

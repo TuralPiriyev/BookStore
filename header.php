@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="CSS/header.css"/>
     <link rel="stylesheet" href="CSS/footer.css"/>
     <link rel = "stylesheet" href="CSS/all-books.css"/>
+    <link rel = "stylesheet" href = "CSS/book.css"/>
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;500;600;700&display=swap" rel="stylesheet">
     

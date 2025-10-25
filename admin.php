@@ -91,10 +91,31 @@ while($users = mysqli_fetch_assoc($result)) {
   ?>
     </table>
 </div>
+ <?php
+   if(isset($_POST['title']) && isset($_POST['author']) && isset($_POST['pages']) && isset($_POST['price'])
+    && isset($_POST['stock']) && isset($_POST['description']) && isset($_POST['image']) && isset($_POST['author']) && isset($_POST['BookId']) && isset($_POST['AuthorId']))
+   {
+    $bookId = mysqli_real_escape_string($conn, $_POST['BookId']);
+    $authorId = mysqli_real_escape_string($conn, $_POST['AuthorId']);
+    $title = mysqli_real_escape_string($conn, $_POST['title']);
+    $author = mysqli_real_escape_string($conn, $_POST['author']);
+    $pages = mysqli_real_escape_string($conn, $_POST['pages']);
+    $price = mysqli_real_escape_string($conn, $_POST['price']);
+    $stock = mysqli_real_escape_string($conn, $_POST['stock']);
+    $description = mysqli_real_escape_string($conn, $_POST['description']);
+    $image = mysqli_real_escape_string($conn, $_POST['image']);
 
+    $sql = "insert into books ('title', 'pages', 'price', 'stock', 'description', 'cover_image') values ('$title', '$pages', '$price', '$stock', '$description', '$image');
+            insert into authors('Name') values('$author');
+            insert into book_authors('book_id', 'author_id') values('$bookId', '$authorId');";
+    $result = mysqli_query($conn, $sql);
+   }
+ ?>
 <div class="section" id="books-section">
     <h2>Add Book</h2>
     <form action="" method="POST">
+        <input type="hidden" placeholder = "Book Id" name = "BookId" required>
+        <input type="hidden" placeholder = "Author Id" name = "AuthorId" required>
         <input type="text" placeholder="Title" name="title" required>
         <input type="text" placeholder="Author" name="author" required>
         <input type="number" placeholder="Pages" name="pages" required>
@@ -116,6 +137,43 @@ while($users = mysqli_fetch_assoc($result)) {
             <th>Description</th>
             <th>Image</th>
         </tr>
+         <?php 
+          $sql = "SELECT 
+            b.*, 
+            a.name AS author_name
+        FROM 
+            books b
+        JOIN 
+            book_authors ba ON b.id = ba.book_id
+        JOIN 
+            authors a ON ba.author_id = a.id";
+          $result = mysqli_query($conn,$sql);
+          while($books = mysqli_fetch_assoc($result))
+          {
+        ?>
+         <tr>
+            <td><?php echo $books['title'] ?></td>
+            <td><?php echo $books['author_name'] ?></td>
+            <td><?php echo $books['pages'] ?></td>
+            <td><?php echo $books['price'] ?></td>
+            <td><?php echo $books['stock'] ?></td>
+            <td><?php echo $books['description'] ?></td>
+            <td><?php echo $books['cover_image'] ?></td>
+             <td>
+
+        <form method="POST" action="" style="display:inline;">
+            <input type="hidden" name="edit_id" value="<?php echo $books['Id']; ?>">
+            <button type="submit">Edit</button>
+        </form>
+
+
+        <form method="POST" action="" style="display:inline;">
+            <input type="hidden" name="delete_id" value="<?php echo $books['Id']; ?>">
+            <button type="submit" name="delete_user">Delete</button>
+        </form>
+    </td>
+         </tr>
+        <?php } ?>
     </table>
 </div>
 

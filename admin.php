@@ -1,5 +1,72 @@
 <?php
    require_once "db.php";
+
+    session_start();
+    if(isset($_SESSION['message']))
+    {
+        echo "<script> alert('". $_SESSION['message'] ."');</script>";
+        unset($_SESSION['message']);
+    }
+
+   if($_SERVER['REQUEST_METHOD'] === 'POST')
+   {
+    $act = $_POST['action'] ;
+
+
+  //istifadeci elave
+    if($act === 'add_user' && isset($_POST['username']) && isset($_POST['password']) && isset($_POST['role']))
+  {
+    $username = mysqli_real_escape_string($conn, $_POST['username']);
+    $password = mysqli_real_escape_string($conn, $_POST['password']);
+    $role = mysqli_real_escape_string($conn, $_POST['role']);
+
+    $sql = "Insert into login(username, password, role) values('$username','$password','$role');";
+    $result = mysqli_query($conn, $sql);
+    
+    if(mysqli_query($conn, $sql))
+    {
+        $_SESSION['message'] = "$username-$role added successfully";
+        header('Location: admin.php?tab=users#users');
+        exit;
+    }
+    else{echo "Error added user:" . mysqli_error($conn);}
+  }
+
+// istifadeci silme 
+   if($act === 'delete_user' && isset($_POST["delete_user"]))
+   {
+    $delete_id = mysqli_real_escape_string($conn, $_POST['delete_id']);
+    $delete_sql = "Delete from login where Id = '$delete_id'";
+
+    if(mysqli_query($conn, $delete_sql))
+    {
+        $_SESSION['message'] = "User deleted successfully";
+        header('Location: admin.php?tab=users#users');
+        exit;
+    }
+    else{echo "Error deleting user:" . mysqli_error($conn);}
+
+   }
+
+   //istifadeci editlemek
+   if($act === "edit_user" && isset($_POST['edit_id']) && isset($_POST['username']) && isset($_POST['password']) && isset($_POST['role'])) 
+   {
+     $username = mysqli_real_escape_string($conn, $_POST['username']);
+     $password = mysqli_real_escape_string($conn, $_POST['password']);
+     $role = mysqli_real_escape_string($conn, $_POST['role']);
+    $id = mysqli_real_escape_string($conn, $_POST['edit_id']);
+    $edit_sql = "Update login set username = '$username', password = '$password', role = '$role' where id = $id ";
+    $result = mysqli_query($conn, $edit_sql);
+    
+    if(mysqli_query($conn, $edit_sql))
+    {
+        $_SESSION['message'] = "$username-$role update successfully";
+        header('Location: admin.php?tab=users#users');
+        exit;
+    }
+    else{echo "Error update user:" . mysqli_error($conn);}
+   }
+   }
 ?>
 
 
@@ -10,30 +77,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Panel</title>
 <link rel="stylesheet" href="CSS/admin.css"/>
+<link rel = "stylesheet" href="CSS/pop-up.css"/>
 </head>
 <body>
-
+    
 <div class="navbar">Admin Panel</div>
+
+
 
 <div class="choose">
     <div id="users-btn">Users</div>
     <div id="books-btn">Books</div>
 </div>
 
-<?php
-  if(isset($_POST['username']) && isset($_POST['password']) && isset($_POST['role']))
-  {
-    $username = mysqli_real_escape_string($conn, $_POST['username']);
-    $password = mysqli_real_escape_string($conn, $_POST['password']);
-    $role = mysqli_real_escape_string($conn, $_POST['role']);
-
-    $sql = "Insert into login(username, password, role) values('$username','$password','$role');";
-    $result = mysqli_query($conn, $sql);
-  }
-?>
 <div class="section" id="users-section">
     <h2>Add User</h2>
-    <form action="" method="POST">
+    <form action="admin.php" method="POST">
+        <input type="hidden" name = "action" value = "add_user">
         <input type="text" placeholder="Username" name="username" required>
         <input type="password" placeholder="Password" name="password" required>
         <select name="role" required>
@@ -62,34 +122,26 @@ while($users = mysqli_fetch_assoc($result)) {
     <td><?php echo $users['role']; ?></td>
     <td>
 
-        <form method="POST" action="edit_user.php" style="display:inline;">
+        <form method="POST" action="admin.php" style="display:inline;">
+            <input type="hidden" name = "action" value = "edit_user"/>
             <input type="hidden" name="edit_id" value="<?php echo $users['Id']; ?>">
-            <button type="submit">Edit</button>
+            <button class="edit_btn" type="submit">Edit</button>
         </form>
 
 
-        <form method="POST" action="" style="display:inline;">
+        <form method="POST" action="admin.php" style="display:inline;">
+            <input type="hidden" name = "action" value = "delete_user"/>
             <input type="hidden" name="delete_id" value="<?php echo $users['Id']; ?>">
-            <button type="submit" name="delete_user">Delete</button>
+            <button  type="submit" name="delete_user">Delete</button>
         </form>
     </td>
 </tr>
 <?php }  ?>
-
-<?php
-   if(isset($_POST["delete_user"]))
-   {
-    $delete_id = mysqli_real_escape_string($conn, $_POST['delete_id']);
-    $delete_sql = "Delete from login where Id = '$delete_id'";
-
-    if(mysqli_query($conn, $delete_sql))
-    {
-        echo "User deleted successfully!";
-    }
-    else{echo "Error deleting user:" . mysqli_error($conn);}
-   }
-  ?>
+ 
     </table>
+
+
+
 </div>
  <?php
    if(isset($_POST['title']) && isset($_POST['author']) && isset($_POST['pages']) && isset($_POST['price'])
@@ -113,7 +165,8 @@ while($users = mysqli_fetch_assoc($result)) {
  ?>
 <div class="section" id="books-section">
     <h2>Add Book</h2>
-    <form action="" method="POST">
+    <form action="admin.php" method="POST">
+        <input type="hidden" name = "action" value = "book_add" >
         <input type="hidden" placeholder = "Book Id" name = "BookId" required>
         <input type="hidden" placeholder = "Author Id" name = "AuthorId" required>
         <input type="text" placeholder="Title" name="title" required>
@@ -161,13 +214,15 @@ while($users = mysqli_fetch_assoc($result)) {
             <td><?php echo $books['cover_image'] ?></td>
              <td>
 
-        <form method="POST" action="" style="display:inline;">
+        <form method="POST" action="admin.php" style="display:inline;">
+            <input type="hidden" name = "action" value = "edit_book"/>
             <input type="hidden" name="edit_id" value="<?php echo $books['Id']; ?>">
             <button type="submit">Edit</button>
         </form>
 
 
-        <form method="POST" action="" style="display:inline;">
+        <form method="POST" action="admin.php" style="display:inline;">
+            <input type="hidden" name = "action" value = "delete_book"/>
             <input type="hidden" name="delete_id" value="<?php echo $books['Id']; ?>">
             <button type="submit" name="delete_user">Delete</button>
         </form>
@@ -177,9 +232,22 @@ while($users = mysqli_fetch_assoc($result)) {
     </table>
 </div>
 
-<script>
-document.getElementById("books-section").style.display = "block";
+<div id="usersPopup" class="users-popup" style = "display:none;">
+  <div class="users-popup-content">
+    <form action="admin.php" method="POST">
+        <input type="hidden" name = "action" value = "edit_user">
+        <input type="text" placeholder="Username" name="username" required>
+        <input type="password" placeholder="Password" name="password" required>
+        <select name="role" required>
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+        </select>
+        <button class = "close_popup" type="submit">Update User</button>
+    </form>
+  </div>
+</div>  
 
+<script>
 document.getElementById("users-btn").addEventListener("click", function() {
     document.getElementById("users-section").style.display = "block";
     document.getElementById("books-section").style.display = "none";
@@ -189,6 +257,68 @@ document.getElementById("books-btn").addEventListener("click", function() {
     document.getElementById("books-section").style.display = "block";
     document.getElementById("users-section").style.display = "none";
 });
+
+document.querySelectorAll(".edit_btn").forEach(btn => {
+  btn.addEventListener("click", function(){
+      document.getElementById("usersPopup").style.display = "flex";
+  });
+});
+
+document.getElementById("close_popup").addEventListener("click", function()
+{
+    document.getElementById("usersPopup").style.display = "none";
+});
+
+
+function showTab(tab) {
+  document.getElementById("users-section").style.display = "none";
+  document.getElementById("books-section").style.display = "none";
+  if (tab === 'users') {
+    document.getElementById("users-section").style.display = "block";
+  } else if (tab === 'books') {
+    document.getElementById("books-section").style.display = "block";
+  }
+}
+
+// səhifə yüklənəndə URL-dən tab oxuyur
+document.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search);
+  const tab = params.get("tab") || (location.hash ? location.hash.substring(1) : "users");
+  showTab(tab);
+});
+</script>
+
+<script>
+    document.querySelectorAll(".edit_btn").forEach(btn => {
+  btn.addEventListener("click", function(e){
+      e.preventDefault(); // formun submit olmasını dayandırır
+
+      const row = btn.closest("tr"); // kliklənmiş düymənin satırı
+      const username = row.cells[0].innerText;
+      const password = row.cells[1].innerText;
+      const role = row.cells[2].innerText;
+      const userId = row.querySelector("input[name='edit_id']").value;
+
+      const popup = document.getElementById("usersPopup");
+      popup.style.display = "flex";
+
+      // Pop-up input-larını doldur
+      popup.querySelector("input[name='username']").value = username;
+      popup.querySelector("input[name='password']").value = password;
+      popup.querySelector("select[name='role']").value = role;
+
+      // Hidden input üçün id əlavə et
+      let hiddenId = popup.querySelector("input[name='edit_id']");
+      if(!hiddenId){
+          hiddenId = document.createElement("input");
+          hiddenId.type = "hidden";
+          hiddenId.name = "edit_id";
+          popup.querySelector("form").appendChild(hiddenId);
+      }
+      hiddenId.value = userId;
+  });
+});
+
 </script>
 
 </body>

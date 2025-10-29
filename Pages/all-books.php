@@ -2,7 +2,6 @@
        if (isset($_GET['search']) && !empty($_GET['search'])) {
     $search = mysqli_real_escape_string($conn, $_GET['search']);
 
-    // Hem kitabin, hem de authorun adına gore axtarış
     $sql = "
         SELECT DISTINCT b.title, b.price, b.cover_image
         FROM books b
@@ -10,6 +9,7 @@
         JOIN authors a ON a.id = ba.author_id
         WHERE b.title LIKE '%$search%' OR a.name LIKE '%$search%'
     ";
+  
 } 
 elseif(isset($_POST['Clean']))
 {
@@ -17,7 +17,6 @@ elseif(isset($_POST['Clean']))
 }
   
 else {
-    // Əgər axtarış boşdursa, bütün kitabları göstər
     $sql = "SELECT title, price, cover_image FROM books";
 }
   $result = mysqli_query($conn, $sql);
@@ -31,7 +30,11 @@ else {
     <div class="result-sorting">
         <?php
          $bookCount = count($books);
-        ?>
+         
+             if($bookCount == 0)
+             { ?>
+                <div> <h1> Books Not Found</h1></div>
+        <?php }  ?>
         <div class = "same-pos"><h5 class = "result-books">Showing all <?php echo $bookCount;?>  results</h5></div>
         <div class = "same-pos2 ">
             <form method="GET"> 

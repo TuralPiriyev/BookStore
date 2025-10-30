@@ -66,6 +66,72 @@
     }
     else{echo "Error update user:" . mysqli_error($conn);}
    }
+   //kitab elave etmek 
+   if($act === "add_book"  && isset($_POST['title']) && isset($_POST['author']) && isset($_POST['pages']) && isset($_POST['price'])
+    && isset($_POST['stock']) && isset($_POST['description']) && isset($_POST['image']) && isset($_POST['author']))
+   {
+   
+    $title = mysqli_real_escape_string($conn, $_POST['title']);
+    $author = mysqli_real_escape_string($conn, $_POST['author']);
+    $pages = mysqli_real_escape_string($conn, $_POST['pages']);
+    $price = mysqli_real_escape_string($conn, $_POST['price']);
+    $stock = mysqli_real_escape_string($conn, $_POST['stock']);
+    $description = mysqli_real_escape_string($conn, $_POST['description']);
+    $image = mysqli_real_escape_string($conn, $_POST['image']);
+    
+    $add_book_sql = "Insert into books(title, pages, price, stock, description, cover_image) values('$title', $pages, $price, $stock, '$description', 'covers/$image.jpg');";
+    mysqli_query($conn, $add_book_sql);
+    $add_author_sql = "Insert into authors(name) values('$author');";
+    mysqli_query($conn, $add_author_sql);
+
+    $select_for_binding_book = "Select Id  from books where title = '$title';";
+    $result_book_Id = mysqli_query($conn, $select_for_binding_book);
+
+    $select_for_binding_author = "Select Id from authors where name = '$author';";
+    $result_author_Id = mysqli_query($conn, $select_for_binding_author);
+    
+    $book_toplu_Id = mysqli_fetch_assoc($result_book_Id);
+    $author_toplu_Id = mysqli_fetch_assoc($result_author_Id);
+
+    $book_id =  $book_toplu_Id ['Id'];
+    $author_id =  $author_toplu_Id ['Id'];
+
+    $add_author_book_sql = "Insert into book_authors(book_id, author_id) values( $book_id , $author_id);";
+     mysqli_query($conn, $add_author_book_sql);
+   // $result_author = mysqli_query($conn, $add_author_sql);
+
+    if(mysqli_query($conn, $add_book_sql) && mysqli_query($conn, $add_author_sql) && mysqli_query($conn, $add_author_book_sql))
+    {
+        $_SESSION['message'] = "$title book added successfully";
+        header('Location: admin.php?tab=books#books');
+        exit;
+    }
+    else{echo "yoxlanislarda problem var:" . mysqli_error($conn);}
+   }
+   //kitab silme 
+   if($act === "delete_book" && isset($_POST["delete_id"]))
+   {
+     $delete_id_book = mysqli_real_escape_string($conn, $_POST["delete_id"]);
+     $delete_sql_book = "Delete from books where Id = $delete_id_book;";
+     $select_auth = "Select author_id from book_authors where book_id = $delete_id_book;";
+     $result_selected_Author = mysqli_query($conn, $select_auth);
+     
+     $author_toplu_id = mysqli_fetch_assoc($result_selected_Author);
+     $delete_id_author = $author_toplu_id['author_id'];
+     $delete_sql_author = "Delete from authors where Id = $delete_id_author;";
+     $delete_sql_book_author = "Delete from book_authors where author_id = $delete_id_author and book_id = $delete_id_book; ";
+      
+     if( mysqli_query($conn, $delete_sql_book) && mysqli_query($conn, $delete_sql_author) && mysqli_query($conn, $delete_sql_book_author))
+     {
+       $_SESSION['message'] = "Book deleted successfully";
+        header('Location: admin.php?tab=books#books');
+        exit;
+    }
+    else{echo "Error deleting books:" . mysqli_error($conn);}
+
+   }
+   else {echo "silinmede error yarandi";}
+   
    }
 ?>
 
@@ -82,8 +148,6 @@
 <body>
     
 <div class="navbar">Admin Panel</div>
-
-
 
 <div class="choose">
     <div id="users-btn">Users</div>
@@ -143,30 +207,10 @@ while($users = mysqli_fetch_assoc($result)) {
 
 
 </div>
- <?php
-   if(isset($_POST['title']) && isset($_POST['author']) && isset($_POST['pages']) && isset($_POST['price'])
-    && isset($_POST['stock']) && isset($_POST['description']) && isset($_POST['image']) && isset($_POST['author']) && isset($_POST['BookId']) && isset($_POST['AuthorId']))
-   {
-    $bookId = mysqli_real_escape_string($conn, $_POST['BookId']);
-    $authorId = mysqli_real_escape_string($conn, $_POST['AuthorId']);
-    $title = mysqli_real_escape_string($conn, $_POST['title']);
-    $author = mysqli_real_escape_string($conn, $_POST['author']);
-    $pages = mysqli_real_escape_string($conn, $_POST['pages']);
-    $price = mysqli_real_escape_string($conn, $_POST['price']);
-    $stock = mysqli_real_escape_string($conn, $_POST['stock']);
-    $description = mysqli_real_escape_string($conn, $_POST['description']);
-    $image = mysqli_real_escape_string($conn, $_POST['image']);
-
-    $sql = "insert into books ('title', 'pages', 'price', 'stock', 'description', 'cover_image') values ('$title', '$pages', '$price', '$stock', '$description', '$image');
-            insert into authors('Name') values('$author');
-            insert into book_authors('book_id', 'author_id') values('$bookId', '$authorId');";
-    $result = mysqli_query($conn, $sql);
-   }
- ?>
 <div class="section" id="books-section">
     <h2>Add Book</h2>
     <form action="admin.php" method="POST">
-        <input type="hidden" name = "action" value = "book_add" >
+        <input type="hidden" name = "action" value = "add_book"/>
         <input type="hidden" placeholder = "Book Id" name = "BookId" required>
         <input type="hidden" placeholder = "Author Id" name = "AuthorId" required>
         <input type="text" placeholder="Title" name="title" required>
@@ -182,6 +226,8 @@ while($users = mysqli_fetch_assoc($result)) {
     <h3>Books List</h3>
     <table>
         <tr>
+            <th>Author_Id</th>
+            <th>Book_Id</th>
             <th>Title</th>
             <th>Author</th>
             <th>Pages</th>
@@ -193,7 +239,7 @@ while($users = mysqli_fetch_assoc($result)) {
          <?php 
           $sql = "SELECT 
             b.*, 
-            a.name AS author_name
+            a.Id As aauthor_id,  a.name AS author_name
         FROM 
             books b
         JOIN 
@@ -205,6 +251,8 @@ while($users = mysqli_fetch_assoc($result)) {
           {
         ?>
          <tr>
+            <td><?php echo $books['aauthor_id']?></td>
+            <td><?php echo $books['Id']?></td>
             <td><?php echo $books['title'] ?></td>
             <td><?php echo $books['author_name'] ?></td>
             <td><?php echo $books['pages'] ?></td>

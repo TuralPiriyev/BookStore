@@ -1,0 +1,6 @@
+This project consisted of two parts: index.php and admin.php where the books are sold.
+
+ We manage users and books in Admin. And in the index.php section, there are books,
+
+ their search by book name and author name, information about books and the functions of adding them to the basket.
+ 
